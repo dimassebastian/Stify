@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main</title>
+    <link rel="stylesheet" href="/public/style.css">
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="app">
+        <div class="isi">
+            <nav class="nav">
+                <header class="headerimg"><img src="/public/assets/logokecil.png" alt="stifylogo"></header>
+                <ul>
+                    <li><a href="/main" hx-boost="true" hx-target="#main-content" hx-swap="outerHTML">Overview</a></li>
+                    <li><a href="/top" hx-boost="true" hx-target="#main-content" hx-swap="outerHTML">Top</a></li>
+                    <li><a href="/stats" hx-boost="true" hx-target="#main-content" hx-swap="outerHTML">Stats</a></li>
+                    <li><a href="/explore" hx-boost="true" hx-target="#main-content" hx-swap="outerHTML">Explore</a></li>
+                </ul>
+            </nav>
+            <div class="content" id="main-content">
+                <div class="header">
+                    <h1>Hello, <span id="user-info" hx-get="/user-info" hx-trigger="load" hx-swap="innerHTML"></span></h1>
+                    <h1 class="head">Top Muziks</h1>
+                </div>
+                
+                <div class="main-con">
+                    
+                    <div class="kontinar"  id="tracks-container">
+                        <h2>4 Weeks</h2>
+                        <div class="tracks-container" id="tracks" hx-get="/top-tracks" hx-trigger="load"></div>
+                    </div>
+                    <div class="kontinar"  id="tracks-container2">
+                        <h2>6 Months</h2>
+                        <div class="tracks-container" id="tracks" hx-get="/top-tracks2" hx-trigger="load"></div>
+                    </div>
+                    <div class="kontinar"  id="tracks-container3">
+                        <h2>Lifetime</h2>
+                        <div class="tracks-container" id="tracks" hx-get="/top-tracks3" hx-trigger="load"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.body.addEventListener('htmx:afterRequest', function(event) {
+            if (event.detail.target.id === 'tracks') {
+                const tracksDiv = event.detail.target;
+    
+                // Clear previous content
+                tracksDiv.innerHTML = '';
+    
+                // Ensure the response is parsed correctly
+                let topTracks;
+                try {
+                    topTracks = JSON.parse(event.detail.xhr.responseText);
+                    console.log('Parsed response:', topTracks);
+                } catch (e) {
+                    console.error('Failed to parse JSON:', e);
+                    return;
+                }
+    
+                // Create and append cards for each track
+                topTracks.forEach(function(track) {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+    
+                    const img = document.createElement('img');
+                    img.src = track.img;
+                    img.alt = track.title + ' - ' + track.artist;
+    
+                    const title = document.createElement('h3');
+                    title.textContent = track.title;
+    
+                    const artist = document.createElement('p');
+                    artist.textContent = track.artist;
+    
+                    card.appendChild(img);
+                    card.appendChild(title);
+                    card.appendChild(artist);
+    
+                    // Debugging: Log each card element to the console
+                    console.log('Created card:', card);
+    
+                    tracksDiv.appendChild(card);
+                });
+            }
+        });
+    </script>
+    
+</body>
+</html>
