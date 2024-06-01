@@ -1,0 +1,53 @@
+:root {
+    --primary-color: #B9FFD2;
+    --secondary-color: #181E1A;
+    --background-color: #121212;
+}
+
+@font-face {
+    font-family: 'Gotham' ;
+    src: url(/font/GothamBold.ttf);
+}
+
+html, body {
+    background-color: var(--background-color);
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+ 
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo{
+    margin-left: 100rem;
+}
+
+.loginbtn {
+    background-color: rgba(24, 30, 26, 0.5); /* Background color with 50% opacity */
+    font-family: Gotham;
+    font-size: 16pt;
+    padding: 1rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    color: var(--primary-color);
+    border-radius: 30px;
+    border-color: #B9FFD2;
+}
+
+.loginbtn-hover {
+    background-image:linear-gradient(to right, #121212, #294935, #77A179);
+}

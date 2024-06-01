@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stify</title>
+    <link rel="stylesheet" href="/public/style.css">
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
+</head>
+<body >
+
+    <main class="container">
+        <div class="main">
+            <img class="Logo" src="/public/assets/StifyLogo.png" alt="Stifylogo">
+            <a href="{{.AuthURL}}" hx-target="#login-result">
+                <div x-data="{ isHovered: false }">
+                <button  :class="{ 'loginbtn-hover': isHovered }"
+                @mouseover="isHovered = true"
+                @mouseout="isHovered = false"
+                class="loginbtn">Log in with Spotify</button></a>
+                </div>
+            <div id="login-result"></div>
+        </div>
+    </main>
+
+</body>
+</html>
