@@ -45,8 +45,8 @@ func main() {
 	r.Get("/home", homePageHandler)
 	r.Get("/user-info", userInfoHandler)
 	r.Get("/top-tracks", topTracksHandler)
-	r.Get("/top-tracks2", topTracksHandler2)
-	r.Get("/top-tracks3", topTracksHandler3)
+	r.Get("/top-artist", topArtistsHandler)
+	r.Get("/top", topHandler)
 
 	log.Println("Starting server on :8080")
 	if err := http.ListenAndServe(":8080", r); err != nil {
@@ -184,6 +184,12 @@ type Track struct {
 	Artist   string `json:"artist"`
 }
 
+type Artist struct {
+	ImageURL string   // URL of the artist's image
+	Name     string   // Name of the artist
+	Genre    []string // List of genres associated with the artist
+}
+
 func topTracksHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "auth-session")
 	tok, ok := session.Values["token"].(*oauth2.Token)
@@ -199,7 +205,7 @@ func topTracksHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get top tracks
 	options := []spotify.RequestOption{
-		spotify.Limit(15),                         // Batasan jumlah (10 lagu)
+		spotify.Limit(50),                         // Batasan jumlah (10 lagu)
 		spotify.Offset(0),                         // Mulai dari indeks 0
 		spotify.Timerange(spotify.ShortTermRange), // Rentang waktu: Pendek
 		// spotify.TimeRange(spotify.MediumTermRange),  // Rentang waktu: Menengah
@@ -225,7 +231,7 @@ func topTracksHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(trackList)
 }
 
-func topTracksHandler2(w http.ResponseWriter, r *http.Request) {
+func topArtistsHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "auth-session")
 	tok, ok := session.Values["token"].(*oauth2.Token)
 	if !ok || tok == nil {
@@ -238,35 +244,33 @@ func topTracksHandler2(w http.ResponseWriter, r *http.Request) {
 
 	client := spotify.New(auth.Client(r.Context(), tok))
 
-	// Get top tracks
+	// Get top artists
 	options := []spotify.RequestOption{
-		spotify.Limit(15),                          // Batasan jumlah (10 lagu)
-		spotify.Offset(0),                          // Mulai dari indeks 0
-		spotify.Timerange(spotify.MediumTermRange), // Rentang waktu: Pendek
-		// spotify.TimeRange(spotify.MediumTermRange),  // Rentang waktu: Menengah
-		// spotify.TimeRange(spotify.LongTermRange),    // Rentang waktu: Panjang
+		spotify.Limit(50),                         // Limit the number of results
+		spotify.Offset(0),                         // Start at index 0
+		spotify.Timerange(spotify.ShortTermRange), // Time range: Medium term
 	}
 
-	tracks, err := client.CurrentUsersTopTracks(context.Background(), options...)
+	artists, err := client.CurrentUsersTopArtists(context.Background(), options...)
 	if err != nil {
-		log.Fatalf("failed to get topTracks: %v", err)
+		log.Fatalf("failed to get topArtists: %v", err)
 	}
 
-	var trackList []Track
-	for _, item := range tracks.Tracks {
-		track := Track{
-			ImageURL: item.Album.Images[0].URL,
-			Title:    item.Name,
-			Artist:   item.Artists[0].Name,
+	var artistList []Artist
+	for _, artist := range artists.Artists {
+		artistItem := Artist{
+			ImageURL: artist.Images[0].URL,
+			Name:     artist.Name,
+			Genre:    artist.Genres, // Assuming the artist has at least one genre listed
 		}
-		trackList = append(trackList, track)
+		artistList = append(artistList, artistItem)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(trackList)
+	json.NewEncoder(w).Encode(artistList)
 }
 
-func topTracksHandler3(w http.ResponseWriter, r *http.Request) {
+func topHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "auth-session")
 	tok, ok := session.Values["token"].(*oauth2.Token)
 	if !ok || tok == nil {
@@ -278,31 +282,29 @@ func topTracksHandler3(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Token from session: %v\n", tok)
 
 	client := spotify.New(auth.Client(r.Context(), tok))
-
-	// Get top tracks
-	options := []spotify.RequestOption{
-		spotify.Limit(15),                        // Batasan jumlah (10 lagu)
-		spotify.Offset(0),                        // Mulai dari indeks 0
-		spotify.Timerange(spotify.LongTermRange), // Rentang waktu: Pendek
-		// spotify.TimeRange(spotify.MediumTermRange),  // Rentang waktu: Menengah
-		// spotify.TimeRange(spotify.LongTermRange),    // Rentang waktu: Panjang
-	}
-
-	tracks, err := client.CurrentUsersTopTracks(context.Background(), options...)
+	user, err := client.CurrentUser(context.Background())
 	if err != nil {
-		log.Fatalf("failed to get topTracks: %v", err)
+		http.Error(w, "Couldn't get user", http.StatusInternalServerError)
+		log.Printf("Error getting user: %v", err)
+		return
 	}
 
-	var trackList []Track
-	for _, item := range tracks.Tracks {
-		track := Track{
-			ImageURL: item.Album.Images[0].URL,
-			Title:    item.Name,
-			Artist:   item.Artists[0].Name,
-		}
-		trackList = append(trackList, track)
+	tmpl, err := template.ParseFiles("../public/templates/top.html")
+	if err != nil {
+		http.Error(w, "Couldn't load template", http.StatusInternalServerError)
+		log.Printf("Error loading template: %v", err)
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(trackList)
+	data := struct {
+		UserID string
+	}{
+		UserID: user.ID,
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, "Couldn't render template", http.StatusInternalServerError)
+		log.Printf("Error rendering template: %v", err)
+	}
 }

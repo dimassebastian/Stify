@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"os"
 
 	"golang.org/x/oauth2"
 )
@@ -105,8 +104,10 @@ func WithRedirectURL(url string) AuthenticatorOption {
 // By default, NewAuthenticator pulls your client ID and secret key from the SPOTIFY_ID and SPOTIFY_SECRET environment variables.
 func New(opts ...AuthenticatorOption) *Authenticator {
 	cfg := &oauth2.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		// ClientID:     os.Getenv("SPOTIFY_ID"),
+		// ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		ClientID:     "45a0ac98c62a461aa71a8de211f7e92f",
+		ClientSecret: "8763ff399ed14dd6bbfa2beb964d6eff",
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  AuthURL,
 			TokenURL: TokenURL,
